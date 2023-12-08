@@ -1,16 +1,42 @@
+import { readdir } from 'node:fs/promises';
+import { sep as DIRECTORY_SEPARATOR } from 'node:path'
+
 import * as Sqrl from 'squirrelly'
 import { TemplateFunction } from 'squirrelly/dist/types/compile'
 
 const templateCache = new Map<string, TemplateFunction>()
-await prepareLayout()
+await preloadViews()
 
-// Need to register all template first
-// Sqrl.templates.define("my-partial", Sqrl.compile("This is a partial speaking"));
 
-async function prepareLayout() {
-    const fileContent = await Bun.file(`views/_layout.html`).text()
-    const compile = Sqrl.compile(fileContent)
-    templateCache.set('_layout', compile)
+async function preloadViews() {
+    // Need to register all template first 
+    // then we wont need to look at template cache anymore
+
+    // @ts-expect-error I suspect that Bun doesnt provide good typing for node api
+    const compoentFileNames: string[] = (await readdir('components', { recursive: true, withFileTypes: true }))
+        // @ts-expect-error
+        .filter(it => !it.isDirectory())
+        // @ts-expect-error 
+        .map(it => `components/${it.name}`)
+
+    // @ts-expect-error
+    const pageFileNames: string[] = (await readdir('pages', { recursive: true, withFileTypes: true }))
+        // @ts-expect-error
+        .filter(it => !it.isDirectory())
+        // @ts-expect-error 
+        .map(it => `pages/${it.name}`)
+
+    const tasks = [...compoentFileNames, ...pageFileNames].map(async name => {
+        const id = name
+            .toLowerCase()
+            .replaceAll('.html', '')
+            .replaceAll(DIRECTORY_SEPARATOR, '.')
+        const content = await Bun.file(`${name}`).text()
+        const compile = Sqrl.compile(content);
+        templateCache.set(id, compile)
+    })
+
+    return Promise.all(tasks)
 }
 
 /**
@@ -18,24 +44,31 @@ async function prepareLayout() {
  * @param name "dir.name" mean /views/dir/name.html  
  * @returns view
  */
-export async function view(name: string, data: Record<string, any> = {}) {
+export async function renderTemplate(name: string, data: Record<string, any> = {}) {
     // format name
     const id = name.toLowerCase()
 
     let compile = templateCache.get(id);
-    const withLayout = templateCache.get('_layout')!
 
     if (!compile) {
-        const fileContent = await Bun.file(`views/${id.replaceAll('.', '/')}.html`).text()
+        const fileContent = await Bun.file(`${id.replaceAll('.', DIRECTORY_SEPARATOR)}.html`).text()
         compile = Sqrl.compile(fileContent)
 
-        // Only do cache in prod
-        if (Bun.env.NODE_ENV === 'Production') {
-            templateCache.set('id', compile)
-        }
     }
 
+    return compile(data, Sqrl.defaultConfig)
+}
+
+export async function page(name: string, data: Record<string, any> = {}) {
+    const content = await renderTemplate(`pages.${name}`, data)
+
+    const withLayout = templateCache.get('pages._layout')!
+
     return withLayout({
-        content: compile(data, Sqrl.defaultConfig)
+        content
     }, Sqrl.defaultConfig)
+}
+
+export async function component(name: string, data: Record<string, any> = {}) {
+    return await renderTemplate(`components.${name}`, data)
 }

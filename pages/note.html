@@ -1,0 +1,17 @@
+<div class="mx-auto w-[540px]">
+
+    <h1 class="text-3xl font-semibold mt-8 mb-4">
+        Notes
+    </h1>
+
+    <div class="space-y-2">
+        {{ @each(it.notes) => note }}
+        <div class="p-3 rounded border bg-white">
+            <h4 class="text-lg font-semibold"> {{ note.title }} </h4>
+            <p> {{ note.body }} </p>
+            <button hx-get="/note/edit/1" hx-trigger="click" hx-target="closest div" hx-swap="outerHTML"
+                class="mt-2 bg-blue-500 py-1 px-3 text-white rounded"> Edit </button>
+        </div>
+        {{ /each }}
+    </div>
+</div>

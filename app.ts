@@ -1,14 +1,26 @@
 import { Elysia } from "elysia";
 import { html } from '@elysiajs/html'
-import { view } from "./core/view";
+import { staticPlugin } from '@elysiajs/static'
+import { page } from "./core/view";
+import noteController from "./controllers/note.controller";
 
 const app = new Elysia()
 
 app
     .use(html())
+    .use(staticPlugin({
+        assets: 'public'
+      }))  
     .get("/", () => "Hello Elysia")
     .get('/test', ({ query }) => {
-        return view('index', { name: query.name ?? 'you' })
+        return page('index', { name: query.name ?? 'you' })
+    })
+    .use(noteController)
+    .onError(({ set, error }) => {
+        set.headers['Content-Type'] = 'text/html;charset=utf-8'
+        return page('404', {
+            message: error.message
+        })
     })
 
 app.listen(3000)

@@ -1,0 +1,19 @@
+<div class="fixed w-screen h-screen flex items-center justify-center">
+    <div>
+        <h1 class="text-3xl">
+            404
+        </h1>
+
+        <h2 class="text-lg opacity-60">
+            Not found
+        </h2>
+
+        <p class="text-md opacity-50 mt-2">
+            {{ @if(it.message) }}
+            {{ it.message  }}
+            {{ #else}}
+            May be there is some typo in the URL"
+            {{ /if}}
+        </p>
+    </div>
+</div>
