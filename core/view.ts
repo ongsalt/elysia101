@@ -1,3 +1,4 @@
+import { MaybePromise } from 'elysia';
 import { readdir } from 'node:fs/promises';
 import { sep as DIRECTORY_SEPARATOR } from 'node:path'
 
@@ -32,8 +33,10 @@ async function preloadViews() {
             .replaceAll('.html', '')
             .replaceAll(DIRECTORY_SEPARATOR, '.')
         const content = await Bun.file(`${name}`).text()
-        const compile = Sqrl.compile(content);
+        const compile = Sqrl.compile(content)
+
         templateCache.set(id, compile)
+        Sqrl.templates.define(id, compile)
     })
 
     return Promise.all(tasks)
@@ -48,12 +51,18 @@ export async function renderTemplate(name: string, data: Record<string, any> = {
     // format name
     const id = name.toLowerCase()
 
+    await preloadViews()
+
     let compile = templateCache.get(id);
+
+    // Can emit .index
+    if (!compile) {
+        compile = templateCache.get(`${id}.index`)
+    }
 
     if (!compile) {
         const fileContent = await Bun.file(`${id.replaceAll('.', DIRECTORY_SEPARATOR)}.html`).text()
         compile = Sqrl.compile(fileContent)
-
     }
 
     return compile(data, Sqrl.defaultConfig)
@@ -71,4 +80,8 @@ export async function page(name: string, data: Record<string, any> = {}) {
 
 export async function component(name: string, data: Record<string, any> = {}) {
     return await renderTemplate(`components.${name}`, data)
+}
+
+export async function both(a: MaybePromise<string>, b: MaybePromise<string>) {
+    return `${(await a)} ${(await b)}`
 }

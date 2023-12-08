@@ -1,0 +1,10 @@
+<div class="transition p-3 rounded border bg-white">
+    <form>
+        <input class="block w-full text-lg font-semibold" name="title" value="Title" autofocus />
+        <input class="block w-full" name="body" value="lorem">
+        <button hx-post="/note" hx-trigger="click" hx-target="closest div" hx-swap="outerHTML"
+            class="mt-2 bg-blue-500 py-1 px-3 text-white rounded"> Save </button>
+        <button hx-trigger="click" hx-target="closest div" hx-swap="delete"
+            class="mt-2 bg-red-500 py-1 px-3 text-white rounded"> Cancel </button>
+    </form>
+</div>

@@ -1,6 +1,12 @@
-<div class="p-3 rounded border bg-white">
-    <h4 class="text-lg font-semibold"> {{ note.title }} </h4>
-    <p> {{ note.body }} </p>
-    <button hx-post="/note/1" hx-trigger="click" hx-target="closest div" hx-swap="outerHTML"
-        class="mt-2 bg-blue-500 py-1 px-3 text-white rounded"> Edit </button>
+<div id="note-{{ it.id }}" class="transition duration-200 p-3 rounded border bg-white shadow-lg">
+    <form>
+        <input class="block w-full text-lg font-semibold" name="title" value="{{ it.title }}" autofocus />
+        <input class="block w-full" name="body" value="{{ it.body }}">
+        <button hx-patch="/note/1" hx-trigger="click" hx-target="closest div" hx-swap="outerHTML"
+            class="mt-2 bg-blue-500 py-1 px-3 text-white rounded"> Save </button>
+        <button hx-delete="/note/1" hx-trigger="click" hx-target="closest div" hx-swap="outerHTML"
+            class="mt-2 bg-red-500 py-1 px-3 text-white rounded"> Delete </button>
+        <button hx-get="/note/1" hx-trigger="click" hx-target="closest div" hx-swap="outerHTML"
+            class="mt-2 bg-gray-400 py-1 px-3 text-white rounded"> Cancel </button>
+    </form>
 </div>
